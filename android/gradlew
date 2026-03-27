@@ -1,23 +1,5 @@
 #!/usr/bin/env sh
+DIR="$(cd "$(dirname "$0")"; pwd)"
+CLASSPATH=$DIR/gradle/wrapper/gradle-wrapper.jar
 
-# Gradle startup script
-
-APP_HOME=$(cd "$(dirname "$0")"; pwd)
-
-# Default JVM options
-DEFAULT_JVM_OPTS=""
-
-# Find Java
-if [ -z "$JAVA_HOME" ]; then
-  JAVA_CMD="java"
-else
-  JAVA_CMD="$JAVA_HOME/bin/java"
-fi
-
-# Gradle wrapper JAR
-CLASSPATH=$APP_HOME/gradle/wrapper/gradle-wrapper.jar
-
-# Run Gradle
-exec "$JAVA_CMD" $DEFAULT_JVM_OPTS \
-  -classpath "$CLASSPATH" \
-  org.gradle.wrapper.GradleWrapperMain "$@"
+java -classpath "$CLASSPATH" org.gradle.wrapper.GradleWrapperMain "$@"
