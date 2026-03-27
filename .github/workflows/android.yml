@@ -1,4 +1,4 @@
-name: Build APK (Tag Trigger)
+name: Build & Release APK
 
 on:
   push:
@@ -10,40 +10,83 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 📥 Checkout repo
-      - name: Checkout Code
-        uses: actions/checkout@v3
+      # 📥 Checkout full history (needed for changelog)
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
 
-      # 🟢 Setup Node
+      # 🟢 Node
       - name: Setup Node
-        uses: actions/setup-node@v3
+        uses: actions/setup-node@v4
         with:
           node-version: 18
 
-      # 📦 Install dependencies
-      - name: Install Dependencies
-        run: npm install
+      - run: npm install
 
-      # ☕ Setup Java (Required for Android build)
+      # ☕ Java
       - name: Setup Java
-        uses: actions/setup-java@v3
+        uses: actions/setup-java@v4
         with:
           distribution: 'temurin'
           java-version: '17'
 
-      # 🔧 Make gradlew executable
+      # 🧠 Extract version
+      - name: Extract Version
+        id: version
+        run: |
+          TAG=${GITHUB_REF#refs/tags/}
+          VERSION=${TAG#apk/v}
+
+          echo "VERSION_NAME=$VERSION" >> $GITHUB_ENV
+          echo "VERSION_CODE=$(date +%s)" >> $GITHUB_ENV
+
+      # 📝 Generate Changelog
+      - name: Generate Changelog
+        id: changelog
+        run: |
+          PREV_TAG=$(git tag --sort=-creatordate | sed -n '2p')
+
+          if [ -z "$PREV_TAG" ]; then
+            LOGS=$(git log --pretty=format:"- %s")
+          else
+            LOGS=$(git log $PREV_TAG..HEAD --pretty=format:"- %s")
+          fi
+
+          echo "CHANGELOG<<EOF" >> $GITHUB_ENV
+          echo "$LOGS" >> $GITHUB_ENV
+          echo "EOF" >> $GITHUB_ENV
+
+      # 🔧 Gradle permission
       - name: Grant Permission
         run: chmod +x android/gradlew
 
       # 📱 Build APK
-      - name: Build Debug APK
+      - name: Build APK
         run: |
           cd android
-          ./gradlew assembleDebug
+          ./gradlew assembleDebug \
+            -PVERSION_NAME=$VERSION_NAME \
+            -PVERSION_CODE=$VERSION_CODE
 
-      # 📤 Upload APK
-      - name: Upload APK
-        uses: actions/upload-artifact@v3
+      # 📦 Rename APK
+      - name: Rename APK
+        run: |
+          mv android/app/build/outputs/apk/debug/app-debug.apk \
+             android/app/build/outputs/apk/debug/locasdot-${VERSION_NAME}.apk
+
+      # 🚀 Create GitHub Release + Upload APK
+      - name: Create Release
+        uses: softprops/action-gh-release@v2
         with:
-          name: locasdot-apk
-          path: android/app/build/outputs/apk/debug/app-debug.apk
+          tag_name: apk/v${{ env.VERSION_NAME }}
+          name: "LocasDot Personal v${{ env.VERSION_NAME }}"
+          body: |
+            ## 🚀 What's New
+            ${{ env.CHANGELOG }}
+
+            ---
+            🔐 Offline-first finance app
+          files: android/app/build/outputs/apk/debug/locasdot-${{ env.VERSION_NAME }}.apk
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
