@@ -1,0 +1,28 @@
+apply plugin: "com.android.application"
+
+android {
+    compileSdkVersion 33
+
+    defaultConfig {
+        applicationId "com.locasdot.personal"
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0"
+
+        multiDexEnabled true
+    }
+
+    buildTypes {
+        debug {
+            signingConfig signingConfigs.debug
+        }
+        release {
+            minifyEnabled false
+        }
+    }
+}
+
+dependencies {
+    implementation "com.facebook.react:react-native:+"
+}
