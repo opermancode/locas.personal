@@ -7,49 +7,31 @@ import { theme } from '../theme/theme';
 
 export default function AddTransactionScreen() {
   const [accounts, setAccounts] = useState([]);
-  const [selected, setSelected] = useState(null);
-  const [amount, setAmount] = useState('');
+  const [sel, setSel] = useState(null);
+  const [amt, setAmt] = useState('');
 
   useEffect(() => {
-    fetchAccounts((data) => {
+    fetchAccounts(data => {
       setAccounts(data);
-      if (data.length > 0) setSelected(data[0].id);
+      if (data.length) setSel(data[0].id);
     });
   }, []);
 
   return (
     <View style={styles.container}>
-      <Picker selectedValue={selected} onValueChange={setSelected}>
-        {accounts.map(acc => (
-          <Picker.Item key={acc.id} label={acc.name} value={acc.id} />
-        ))}
+      <Picker selectedValue={sel} onValueChange={setSel}>
+        {accounts.map(a => <Picker.Item key={a.id} label={a.name} value={a.id} />)}
       </Picker>
 
-      <TextInput
-        label="Amount"
-        mode="outlined"
-        keyboardType="numeric"
-        onChangeText={setAmount}
-        style={styles.input}
-      />
+      <TextInput label="Amount" mode="outlined" onChangeText={setAmt} style={styles.input} />
 
-      <Button
-        mode="contained"
-        style={styles.expense}
-        onPress={() =>
-          addTransaction(selected, 'expense', Number(amount), 'general')
-        }
-      >
+      <Button mode="contained" style={{ backgroundColor: theme.colors.expense }}
+        onPress={() => addTransaction(sel, 'expense', Number(amt), 'general')}>
         Add Expense
       </Button>
 
-      <Button
-        mode="contained"
-        style={styles.income}
-        onPress={() =>
-          addTransaction(selected, 'income', Number(amount), 'salary')
-        }
-      >
+      <Button mode="contained" style={{ marginTop: 10, backgroundColor: theme.colors.income }}
+        onPress={() => addTransaction(sel, 'income', Number(amt), 'salary')}>
         Add Income
       </Button>
     </View>
@@ -57,20 +39,6 @@ export default function AddTransactionScreen() {
 }
 
 const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    backgroundColor: theme.colors.background,
-    padding: 20,
-  },
-  input: {
-    marginVertical: 15,
-  },
-  expense: {
-    marginTop: 10,
-    backgroundColor: theme.colors.expense,
-  },
-  income: {
-    marginTop: 10,
-    backgroundColor: theme.colors.income,
-  },
+  container: { flex: 1, backgroundColor: theme.colors.background, padding: 20 },
+  input: { marginVertical: 15 }
 });
