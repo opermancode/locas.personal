@@ -1,35 +1,52 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
+import { Text } from 'react-native';
 import { NavigationContainer } from '@react-navigation/native';
-import { createNativeStackNavigator } from '@react-navigation/native-stack';
+import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
+import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { PaperProvider } from 'react-native-paper';
 
-import Login from './src/screens/LoginScreen';
-import Register from './src/screens/RegisterScreen';
-import Main from './src/navigation/MainTabs';
+import DashboardScreen from './src/screens/DashboardScreen';
+import AccountsScreen from './src/screens/AccountsScreen';
+import ExpensesScreen from './src/screens/ExpensesScreen';
+import AutomationScreen from './src/screens/AutomationScreen';
+import ExtraIncomeScreen from './src/screens/ExtraIncomeScreen';
+import BorrowedDebtScreen from './src/screens/BorrowedDebtScreen';
+import SettingsScreen from './src/screens/SettingsScreen';
 
-import { initDB } from './src/database/db';
-import { getUser } from './src/database/userQueries';
+const Tab = createBottomTabNavigator();
 
-const Stack = createNativeStackNavigator();
+const screens = [
+  { name: 'Dashboard', component: DashboardScreen, icon: '🏠' },
+  { name: 'Accounts', component: AccountsScreen, icon: '🏦' },
+  { name: 'Expenses', component: ExpensesScreen, icon: '🧾' },
+  { name: 'Automation', component: AutomationScreen, icon: '⚙️' },
+  { name: 'Income+', component: ExtraIncomeScreen, icon: '💸' },
+  { name: 'Borrowed/Debt', component: BorrowedDebtScreen, icon: '🤝' },
+  { name: 'Settings', component: SettingsScreen, icon: '🔧' },
+];
 
 export default function App() {
-  const [route, setRoute] = useState(null);
-
-  useEffect(() => {
-    initDB();
-    setTimeout(() => {
-      getUser(user => setRoute(user ? 'Login' : 'Register'));
-    }, 300);
-  }, []);
-
-  if (!route) return null;
-
   return (
-    <NavigationContainer>
-      <Stack.Navigator screenOptions={{ headerShown: false }}>
-        {route === 'Register' && <Stack.Screen name="Register" component={Register} />}
-        <Stack.Screen name="Login" component={Login} />
-        <Stack.Screen name="Main" component={Main} />
-      </Stack.Navigator>
-    </NavigationContainer>
+    <SafeAreaProvider>
+      <PaperProvider>
+        <NavigationContainer>
+          <Tab.Navigator
+            screenOptions={({ route }) => ({
+              headerShown: false,
+              tabBarActiveTintColor: '#0f766e',
+              tabBarIcon: ({ color }) => {
+                const screen = screens.find((s) => s.name === route.name);
+                return <Text style={{ color }}>{screen?.icon ?? '•'}</Text>;
+              },
+              tabBarLabelStyle: { fontSize: 11 },
+            })}
+          >
+            {screens.map((screen) => (
+              <Tab.Screen key={screen.name} name={screen.name} component={screen.component} />
+            ))}
+          </Tab.Navigator>
+        </NavigationContainer>
+      </PaperProvider>
+    </SafeAreaProvider>
   );
 }
