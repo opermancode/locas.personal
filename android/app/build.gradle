@@ -7,8 +7,8 @@ android {
         applicationId "com.locasdot.personal"
         minSdkVersion 21
         targetSdkVersion 33
-        versionCode 1
-        versionName "1.0"
+        versionCode = ((project.findProperty("VERSION_CODE") ?: "1") as String).toInteger()
+        versionName = (project.findProperty("VERSION_NAME") ?: "1.0").toString()
 
         multiDexEnabled true
     }
@@ -20,6 +20,10 @@ android {
         release {
             minifyEnabled false
         }
+    }
+
+    packagingOptions {
+        pickFirst "**/libc++_shared.so"
     }
 }
 
